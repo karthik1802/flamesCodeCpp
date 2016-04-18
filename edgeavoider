@@ -1,0 +1,94 @@
+#include <avr/interrupt.h>
+#include <avr/io.h>  
+ 
+#define MOTOR_SPEED 110/2
+
+#define trigPin 6 
+#define echoPin 5 
+
+int LEDPIN = 13;          // Heartbeat led
+int MOTOR_DIR = 12;       // Non PWM pin for direction control
+int MOTOR_PWM = 11;       // PWM controlled pin.
+ 
+int int_counter = 0; 
+int duration, distance ;
+ 
+ 
+void motor_left() {
+  // Set the pulse width
+  OCR2A=MOTOR_SPEED;
+  // Set the directional bit to the correct value
+  digitalWrite(MOTOR_DIR, HIGH);
+  // Set output to PWM
+  TCCR2A |= ((1<<COM2A1) | (1<<COM2A0));
+}
+ 
+// Turn the motor right.
+// If the motor needs to turn left after this call,
+// use motor_stop first!
+void motor_right() {
+  // Set the pulse width
+  OCR2A=MOTOR_SPEED;
+  // Set the directional bit to the correct value
+  digitalWrite(MOTOR_DIR, LOW);
+  // Set output to PWM (inverted of motor_left function)
+  TCCR2A |= ((1<<COM2A1) | (0<<COM2A0));
+}
+ 
+void motor_stop() {
+  // Disconnect the PWM
+  TCCR2A &= ~((1<<COM2A1) | (1<<COM2A0));
+  // And put is all back to a safe 'LOW'
+  digitalWrite(MOTOR_DIR, LOW);
+  digitalWrite(MOTOR_PWM, LOW);  
+}
+ 
+void setup() {  
+  Serial.begin(9600);
+  CLKPR=0;
+ 
+  // Set the pins to output.
+  pinMode(LEDPIN, OUTPUT);
+  pinMode(MOTOR_DIR, OUTPUT);
+  pinMode(MOTOR_PWM, OUTPUT);
+  // And set these to a initial value to make sure.
+  digitalWrite(MOTOR_DIR, LOW);
+  digitalWrite(MOTOR_PWM, LOW);
+
+
+pinMode(trigPin, OUTPUT); 
+
+pinMode(echoPin, INPUT); 
+
+ 
+ 
+}  
+ 
+void loop() {  
+
+ digitalWrite(trigPin, HIGH); 
+
+delayMicroseconds(500); 
+
+digitalWrite(trigPin, LOW);
+
+duration = pulseIn(echoPin, HIGH); 
+
+distance = (duration/2) / 29.1;
+
+if (distance < 13) 
+
+  { motor_right();
+    delay(1000);
+    motor_stop();
+  }
+else 
+{
+  motor_right();
+  motor_left();
+}
+  
+  
+}
+ 
+ 

@@ -1,2 +1,0 @@
-# kyubi
-arduino
